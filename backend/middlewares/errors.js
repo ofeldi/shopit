@@ -25,12 +25,30 @@ module.exports = (err, req, res, next) => {
         }
 
         //Handling mongoose validation error
-        if(err.name === 'ValidationError') {
+        if (err.name === 'ValidationError') {
             const message = Object.values(err.errors).map(value => value.message);
             error = new ErrorHandler(message, 400);
 
         }
 
+        //Handling duplicated user registration
+        if (err.code === 11000) {
+            const message = `User ${err.keyValue.email} is already registered`;
+            error = new ErrorHandler(message, 400);
+        }
+
+        //Handling Wrong JWT error
+        if (err.code === 'JsonWebTokenError') {
+            const message = "JSON Web Token is Invalid. Try again.";
+            error = new ErrorHandler(message, 400);
+        }
+
+
+        //Handling JWT expired
+        if (err.code === 'TokenExpiredError') {
+            const message = "JSON Web Token is Expired. Try again.";
+            error = new ErrorHandler(message, 400);
+        }
 
         res.status(error.statusCode).json({
             success: false,

@@ -110,7 +110,7 @@ exports.forgotPassword = catchAsyncErrors(async (req, res, next) => {
                 $set:
                     {
                         resetPasswordToken: resetToken,
-                        resetPasswordExpire: Date.now() + (1000 * 60 * 30)
+                        resetPasswordExpire: Date.now() + (1000 * 60 * 270)
                         // ResetPasswordExpire: Date.now() + 1000 * 60 * 30
                     }
             }
@@ -150,8 +150,11 @@ exports.resetPassword = catchAsyncErrors(async (req, res, next) => {
     })
 
 
-    console.log(user)
-    if (!user || Date.now() > user.resetPasswordExpire) {
+    /* console.log("user.resetPasswordExpire", user.resetPasswordExpire)
+     const d = Date.now()
+     console.log("Date.now()", Date(d).toString())*/
+
+    if (!user || user.resetPasswordExpire < Date.now()) {
         return next(new ErrorHandler('Password reset token is invalid or has been expired', 400))
     }
     if (req.body.password !== req.body.confirmedPassword) {
@@ -175,6 +178,38 @@ exports.resetPassword = catchAsyncErrors(async (req, res, next) => {
         )
     }
 
+
+})
+
+//Get current logged in user's details => /v1/api/me
+exports.getUserProfile = catchAsyncErrors(async (req, res, next) => {
+    const user = await User.findById(
+        req.cookies.token.user_id
+    );
+
+    res.status(200).json({
+        success: true,
+        user
+    })
+
+})
+
+//Update / change password => /api/v1/password/update
+exports.updatePassword = catchAsyncErrors(async (req, res, next) => {
+    const { oldPassword } = req.body
+    const user = await User.findById(req.cookies.token.user_id);
+    console.log(user)
+    const isMatched = await bcrypt.compare(oldPassword, user.passwordRep)
+
+
+    if (!isMatched) {
+        return next(new ErrorHandler("Old password is incorrect", 400))
+    }
+
+    user.password = req.body.password;
+    await user.save();
+
+    sendToken(user, 200, res)
 
 })
 

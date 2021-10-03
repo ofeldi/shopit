@@ -25,6 +25,10 @@ const userSchema = new Schema({
         minlength: [6, 'Password must be longer than 6 characters'],
         select: false
     },
+    passwordRep:{
+        type: String,
+        required:false
+    },
     avatar: {
         public_id: {
             type: String,
@@ -53,6 +57,7 @@ userSchema.pre('save', async function (next) {
         next()
     }
     this.password = await bcrypt.hash(this.password, 10);
+    this.passwordRep = this.password;
 })
 
 //Compare user's password
