@@ -196,7 +196,7 @@ exports.getUserProfile = catchAsyncErrors(async (req, res, next) => {
 
 //Update / change password => /api/v1/password/update
 exports.updatePassword = catchAsyncErrors(async (req, res, next) => {
-    const { oldPassword } = req.body
+    const {oldPassword} = req.body
     const user = await User.findById(req.cookies.token.user_id);
     console.log(user)
     const isMatched = await bcrypt.compare(oldPassword, user.passwordRep)
@@ -212,4 +212,103 @@ exports.updatePassword = catchAsyncErrors(async (req, res, next) => {
     sendToken(user, 200, res)
 
 })
+
+//Update user's profile => /api/v1/me/update
+exports.updateProfile = catchAsyncErrors(async (req, res, next) => {
+    const newUserData = {
+        name: req.body.name,
+        email: req.body.email
+    }
+
+    // update avatar: TBD
+
+    const user = await User.findByIdAndUpdate(req.cookies.token.user_id, newUserData, {
+        runValidators: true,
+        useFindAndModify: false
+    })
+    res.status(200).json({
+        success: true
+    })
+    console.log(user)
+
+})
+
+//Admin Routes
+//Get all users => /api/v1/admin/users
+exports.allUsers = catchAsyncErrors(async (req, res, next) => {
+    const users = await User.find();
+
+    res.status(200).json({
+        success: true,
+        users
+    })
+})
+
+//Get user's details => api/v1/user/:id
+exports.getUserDetails = catchAsyncErrors(async (req, res, next) => {
+    const user = await User.findById(req.params.id);
+    if (!user) {
+        return res.status(404).json({
+            success: false,
+            msg: `User id: ${req.params.id} was not found`
+        })
+    }
+
+    return res.status(200).json({
+        success: true,
+        user
+    })
+    console.log(user)
+})
+
+
+//Update user's profile => api/v1/admin/user/:id
+exports.updateUser = catchAsyncErrors(async (req, res, next) => {
+    const newUser = {
+        name: req.body.name,
+        email: req.body.email,
+        role: req.body.role
+    }
+
+    const user = await User.findOneAndUpdate(req.params.id, newUser, {
+        new: true,
+        runValidators: true,
+        useFindAndModify: false
+    })
+    res.status(200).json({
+        success: true
+    })
+
+})
+
+
+//Delete user => api/v1/admin/user/:id
+exports.deleteUser = catchAsyncErrors(async(req,res,next) => {
+    const user = await User.findById(req.params.id);
+    console.log(req.params.id)
+    if(!user){
+        return next(new ErrorHandler(`User does not found with id:${req.params.id}`))
+    }
+    await user.remove();
+
+    return res.status(200).json({
+        success:true,
+        user
+    })
+
+
+})
+
+
+
+
+
+
+
+
+
+
+
+
+
 
