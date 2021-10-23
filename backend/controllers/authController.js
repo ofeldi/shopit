@@ -72,7 +72,7 @@ exports.logout = catchAsyncErrors(async (req, res, next) => {
 
 //Forgot password => /api/v1/password/forgot
 exports.forgotPassword = catchAsyncErrors(async (req, res, next) => {
-    console.log('Forgot was successfully sent to:', req.body.email)
+    //console.log('Forgot was successfully sent to:', req.body.email)
     const user = await User.findOne({
         email: req.body.email
     })

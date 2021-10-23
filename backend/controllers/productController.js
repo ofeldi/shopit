@@ -188,8 +188,8 @@ exports.getProductReview = catchAsyncErrors(async (req, res, next) => {
 exports.deletetReview = catchAsyncErrors(async (req, res, next) => {
     const product = await Product.findById(req.query.productId)
     const review = product.reviews.filter(review => review._id.toString() === req.query.id.toString());
-    console.log(review[0]._id)
-    if (!review[0]._id || !product) {
+    console.log(review)
+    if (review.length === 0 ) {
         return next(new ErrorHandler(`no review was found to delete`, 404))
     }
 
