@@ -6,10 +6,14 @@ import App from './App';
 import {Provider} from 'react-redux';
 import store from './store'
 
+import { CookiesProvider } from "react-cookie";
+
 ReactDOM.render(
+    <CookiesProvider>
     <Provider store={store}>
         <App />
-    </Provider>,
+    </Provider>
+    </CookiesProvider>,
     document.getElementById('root')
 );
 
