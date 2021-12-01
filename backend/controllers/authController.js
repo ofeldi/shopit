@@ -8,7 +8,7 @@ const bcrypt = require('bcryptjs');
 
 //Register a user => api/v1/register
 exports.registerUser = catchAsyncErrors(async (req, res, next) => {
-    const {name, email, password} = req.body;
+    const { name, email, password } = req.body;
 
     const user = await User.create({
         name,
@@ -29,8 +29,15 @@ exports.registerUser = catchAsyncErrors(async (req, res, next) => {
 // Login user => /api/v1/login
 
 exports.loginUser = catchAsyncErrors(async (req, res, next) => {
+    //delete existing cookie
+    res.cookie('token', null, {
+        expires: new Date(Date.now()),
+        httpOnly: true
+    })
 
-    const {email, password} = req.body;
+    // console.log(cookie)
+
+    const { email, password } = req.body;
 
     // Check if email and password is entered by the user
     if (!email || !password) {
@@ -38,7 +45,7 @@ exports.loginUser = catchAsyncErrors(async (req, res, next) => {
     }
 
     //Finding user in database
-    const user = await User.findOne({email}).select('+password')
+    const user = await User.findOne({ email }).select('+password')
     if (!user) {
         return next(new ErrorHandler('Invalid Email or Password', 401));
     }
@@ -55,6 +62,7 @@ exports.loginUser = catchAsyncErrors(async (req, res, next) => {
             }))
     }
     sendToken(user, 200, res)
+
 
 })
 
@@ -84,7 +92,7 @@ exports.forgotPassword = catchAsyncErrors(async (req, res, next) => {
     const resetToken = user.getResetPasswordToken();
     console.log('new reseted token:', resetToken)
 
-    await user.save({validateBeforeSave: false})
+    await user.save({ validateBeforeSave: false })
 
     //Create reset password url
     const resetUrl = `${req.protocol}://${req.get('host')}/api/v1/password/reset/${resetToken}`
@@ -105,14 +113,14 @@ exports.forgotPassword = catchAsyncErrors(async (req, res, next) => {
 
     } catch (error) {
         await User.updateMany(
-            {email: user.email},
+            { email: user.email },
             {
                 $set:
-                    {
-                        resetPasswordToken: resetToken,
-                        resetPasswordExpire: Date.now() + (1000 * 60 * 270)
-                        // ResetPasswordExpire: Date.now() + 1000 * 60 * 30
-                    }
+                {
+                    resetPasswordToken: resetToken,
+                    resetPasswordExpire: Date.now() + (1000 * 60 * 270)
+                    // ResetPasswordExpire: Date.now() + 1000 * 60 * 30
+                }
             }
         );
 
@@ -131,7 +139,7 @@ exports.forgotPassword = catchAsyncErrors(async (req, res, next) => {
            user.getResetPasswordExpire = undefined;*/
         console.log(user)
 
-        await user.save({validateBeforeSave: false})
+        await user.save({ validateBeforeSave: false })
         return next(new ErrorHandler('email was not sent', 500))
 
     }
@@ -196,7 +204,7 @@ exports.getUserProfile = catchAsyncErrors(async (req, res, next) => {
 
 //Update / change password => /api/v1/password/update
 exports.updatePassword = catchAsyncErrors(async (req, res, next) => {
-    const {oldPassword} = req.body
+    const { oldPassword } = req.body
     const user = await User.findById(req.cookies.token.user_id);
     console.log(user)
     const isMatched = await bcrypt.compare(oldPassword, user.passwordRep)
@@ -283,16 +291,16 @@ exports.updateUser = catchAsyncErrors(async (req, res, next) => {
 
 
 //Delete user => api/v1/admin/user/:id
-exports.deleteUser = catchAsyncErrors(async(req,res,next) => {
+exports.deleteUser = catchAsyncErrors(async (req, res, next) => {
     const user = await User.findById(req.params.id);
     console.log(req.params.id)
-    if(!user){
+    if (!user) {
         return next(new ErrorHandler(`User does not found with id:${req.params.id}`))
     }
     await user.remove();
 
     return res.status(200).json({
-        success:true,
+        success: true,
         user
     })
 

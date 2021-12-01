@@ -73,6 +73,7 @@ nav {
 
 .card {
     height: 100%;
+    width:min-content
 }
 
 .card-title a {

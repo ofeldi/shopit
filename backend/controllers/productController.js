@@ -8,8 +8,6 @@ const _ = require('lodash');
 
 // Create new product => /api/v1/admin/product/new
 exports.newProduct = catchAsyncErrors(async (req, res, next) => {
-
-
     console.log(req.cookies.token.user_id)
     req.body.user = req.cookies.token.user_id
     const product = await Product.create(req.body)
@@ -24,20 +22,21 @@ exports.newProduct = catchAsyncErrors(async (req, res, next) => {
 
 exports.getProducts = catchAsyncErrors(async (req, res, next) => {
     const resPerPage = 4;
-    const productCount = await Product.countDocuments()
+    const productsCount = await Product.countDocuments()
 
     const apiFeatures = new APIFeatures(Product.find(), req.query)
         .search()
         .filter()
         .pagination(resPerPage)
+
     const products = await apiFeatures.query;
 
-    //console.log('someone is asking for products')
     res.status(200).json({
-        success: "true",
-        count: products.length,
+        success: true,
+        //count: products.length,
         products: products,
-        productCount
+        productsCount,
+        resPerPage
     })
 })
 
@@ -125,7 +124,7 @@ exports.createProductReview = catchAsyncErrors(async (req, res, next) => {
         name: req.user[0].name
     }
 
-    console.log(req.user[0])
+   // console.log(req.user[0])
 
 
     const product = await Product.findById(productId);
@@ -188,7 +187,7 @@ exports.getProductReview = catchAsyncErrors(async (req, res, next) => {
 exports.deletetReview = catchAsyncErrors(async (req, res, next) => {
     const product = await Product.findById(req.query.productId)
     const review = product.reviews.filter(review => review._id.toString() === req.query.id.toString());
-    console.log(review)
+    //console.log(review)
     if (review.length === 0 ) {
         return next(new ErrorHandler(`no review was found to delete`, 404))
     }

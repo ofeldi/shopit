@@ -5,7 +5,7 @@ const jwt = require('jsonwebtoken')
 
 //Check if user is authenticated
 exports.isAuthenticatedUser = catchAsyncErrors(async (req, res, next) => {
-    console.log(req.cookies)
+    
     const token = req.cookies.token;
     if (!token) {
         return next(new ErrorHandler('Login first to access this resource', 401))
@@ -15,11 +15,8 @@ exports.isAuthenticatedUser = catchAsyncErrors(async (req, res, next) => {
     req.user = await User.find({
         "id": req.cookies.user_id
     })
-
     //req.user = await User.findById(decoded.id)
-
-
-    console.log('The', req.user[0].role, req.user[0].email, 'is sending a request')
+    //console.log('The', req.user[0].role, req.user[0].email, 'is sending a request')
     next()
 
 })
@@ -28,7 +25,7 @@ exports.isAuthenticatedUser = catchAsyncErrors(async (req, res, next) => {
 exports.authorizeRole = (...roles) => {
 
     return (req, res, next) => {
-      //  console.log('inside authorised role', res)
+      
         if (!roles.includes(req.user[0].role)) {
             return next(
                 new ErrorHandler(`Role (${req.user[0].role}) is not allowed to access this resource`,

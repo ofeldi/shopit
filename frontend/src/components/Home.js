@@ -1,4 +1,7 @@
-import React, { Fragment, useEffect } from 'react';
+import React, { Fragment, useState, useEffect } from 'react';
+import Pagination from 'react-js-pagination';
+import Slider from 'rc-slider';
+import 'rc-slider/assets/index.css';
 
 import MetaData from "./layout/MetaData";
 import Loader from './Loader';
@@ -10,19 +13,44 @@ import { getProducts } from '../actions/productActions'
 import { useAlert } from 'react-alert';
 import AlertTemplate from 'react-alert-template-basic';
 
-const Home = () => {
+const { createSliderWithTooltip } = Slider;
+const Range = createSliderWithTooltip(Slider.Range);
+
+const Home = ({ match }) => {
+    const [currentPage, setCurrentPage] = useState(1);
+    const [price, setCurrentPrice] = useState([1, 1000]);
+    const [category, setCategory] = useState('');
+    const [rating, setRating] = useState(0);
+
+    const categories = ['Electronics',
+        'Cameras',
+        'Laptops',
+        'Accessories',
+        'Headphones',
+        'Food',
+        'Books',
+        'Clothes/Shoes',
+        'Beauty/Health',
+        'Sports',
+        'Outdoors',
+        'Home']
+
     const alert = useAlert();
     const dispatch = useDispatch();
 
-    const { loading, products, error, productsCount } = useSelector(state => state.products)
+    const { loading, products, error, productsCount, resPerPage } = useSelector(state => state.products);
+    const keyword = match.params.keyword;
 
     useEffect(() => {
-      if (error){
-          return (alert.show(error))
-      }
-      dispatch(getProducts());
-    }, [dispatch,alert,error])
+        if (error) {
+            return (alert.show(error))
+        }
+        dispatch(getProducts(keyword, currentPage, price, category, rating));
+    }, [dispatch, alert, error, keyword, currentPage, price, category, rating])
 
+    function setCurrentPageNo(pageNumber) {
+        setCurrentPage(pageNumber)
+    }
 
 
     return (
@@ -34,19 +62,133 @@ const Home = () => {
 
                     <section id="products" className="container mt-5">
                         <div className="row">
-                            {products && products.map(product => (
-                                <Product key={product._id} product={product} />
-                            ))}
+                            {keyword ? (
+                                <Fragment>
+                                    <div className="col-3 col-md-3 mt-5 mb-5">
+                                        <div className="px-2">
+                                            <Range
+                                                marks={{
+                                                    1: `$1`,
+                                                    1000: `$1000`
+                                                }}
+                                                min={1}
+                                                max={1000}
+                                                default={1, 1000}
+                                                tipFormatter={value => `$${value}`}
+                                                tipProps={{
+                                                    placement: "top",
+                                                    visible: true
+                                                }}
+                                                value={price}
+                                                onChange={price => setCurrentPrice(price)}
+                                            />
+                                            <hr className="my-5" />
+                                            <div className="mt-5">
+                                                <h4 className="mb-3">
+                                                    Categories
+                                                </h4>
+
+                                                <ul className="pl-0">
+                                                    {categories.map(category => (
+                                                        <li
+                                                            style={{
+                                                                cursor: 'pointer',
+                                                                listStyleType: 'none'
+                                                            }}
+                                                            key={category}
+                                                            onClick={() => setCategory(category)}
+                                                        >
+                                                            {category}
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            </div>
+
+
+
+
+
+
+
+                                            <hr className="my-3" />
+                                            <div className="mt-5">
+                                                <h4 className="mb-3">
+                                                    Ratings
+                                                </h4>
+
+                                                <ul className="pl-0">
+                                                    {[5, 4, 3, 2, 1].map(star => (
+                                                        <li
+                                                            style={{
+                                                                cursor: 'pointer',
+                                                                listStyleType: 'none'
+                                                            }}
+                                                            key={star}
+                                                            onClick={() => setRating(star)}
+                                                        >
+                                                            <div className="rating-outer">
+                                                                <div className="rating-inner"
+                                                                style={{
+                                                                    width:`${star * 20}%`
+                                                                }}
+                                                                
+                                                                
+                                                                >
+
+                                                                </div>
+                                                            </div>
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            </div>
+
+
+
+
+
+
+
+
+
+                                        </div>
+                                    </div>
+
+                                    <div className="raw">
+                                        {products.map(product => (
+                                            <Product key={product._id} product={product} col={4} />))}
+
+                                    </div>
+
+                                </Fragment>
+                            )
+                                : (
+                                    products.map(product => (
+                                        <Product key={product._id} product={product} col={3} />
+                                    )))
+                            }
 
 
                         </div>
                     </section>
+                    {resPerPage <= productsCount && (
+                        <div className="d-flex justify-content-center mt-5" >
+                            <Pagination
+                                activePage={currentPage}
+                                itemsCountPerPage={resPerPage}
+                                totalItemsCount={productsCount}
+                                onChange={setCurrentPageNo}
+                                nextPageText={'Next'}
+                                pervPageText={'Prev'}
+                                firstPageText={'First'}
+                                lastPageText={'Last'}
+                                itemClass="page-item"
+                                linkClass="page-link"
+                            />
+                        </div>
+                    )}
                 </Fragment>
-
             }
-        </Fragment>
+        </Fragment >
     );
-
 }
-
 export default Home;

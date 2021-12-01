@@ -17,7 +17,6 @@ const ProductDetails = ({ match }) => {
     
     useEffect(() => {
         dispatch(getProductDetails(match.params.id))
-        console.log(match.params.id);
             if (error) {
                 alert.error(error);
                 dispatch(clearErrors())
